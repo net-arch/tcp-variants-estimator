@@ -11,6 +11,9 @@ server = '192.168.1.2'
 mss = 1448
 port = 0
 
+plimit = 1500
+
+
 # pritn packet
 def pp(p, msg=None):
     display = ""
@@ -63,12 +66,12 @@ def calc_cwnd(packets):
 
         ack1 = p
 
-        data1 = search_data(packets[i:], ack1['tsval'])
+        data1 = search_data(packets[i:i+plimit], ack1['tsval'])
         if data1 is None:
             # pp(ack1, 'data1 not found')
             continue
 
-        ack1_dash, ack2 = search_acks(packets[i:], data1['seq'])
+        ack1_dash, ack2 = search_acks(packets[i:i+plimit], data1['seq'])
         if ack1_dash is None:
             # pp(ack1, 'ack1_dash not found')
             continue
@@ -80,7 +83,7 @@ def calc_cwnd(packets):
         if ack1_dash is None and ack2 is None:
             break
 
-        data2 = search_data(packets[i:], ack2['tsval'])
+        data2 = search_data(packets[i:i+plimit], ack2['tsval'])
         if data2 is None:
             # pp(ack1, 'data2 not found')
             continue
