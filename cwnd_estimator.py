@@ -55,7 +55,7 @@ def search_acks(packets, fs_seq):
 
 
 def calc_cwnd(packets):
-    cwnd = '0'
+    cwnd = 0
 
     for i, p in enumerate(packets):
         if not is_ack(p):
@@ -90,13 +90,14 @@ def calc_cwnd(packets):
 
 
 def parse_timestamp_opts(opts):
-    for type, raw_data in opts:
-        if type != dpkt.tcp.TCP_OPT_TIMESTAMP:
+    for _type, raw_data in opts:
+        if _type != dpkt.tcp.TCP_OPT_TIMESTAMP:
             continue
 
         d = hexlify(raw_data)
         return d[:8], d[8:]
     return None, None
+
 
 def main():
     global port
