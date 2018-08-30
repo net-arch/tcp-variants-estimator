@@ -34,7 +34,7 @@ def search_data(packets, ack_tsval):
     ack の tsval を tsecr に持つ packet を返す
     """
 
-    for i, p in enumerate(packets):
+    for p in packets:
         if p['src'] == client and p['tsecr'] == ack_tsval:
             return p
 
@@ -45,7 +45,7 @@ def search_acks(packets, fs_seq):
     """
 
     pre = None
-    for i, p in enumerate(packets):
+    for p in packets:
         if p['src'] != server:
             continue
 
