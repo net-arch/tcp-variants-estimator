@@ -59,6 +59,7 @@ def search_acks(packets, fs_seq):
 
 def calc_cwnd(packets):
     cwnd = 0
+    pre_t = datetime.min
 
     for i, p in enumerate(packets):
         if not is_ack(p):
@@ -89,7 +90,9 @@ def calc_cwnd(packets):
             continue
 
         cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
-        print( '{1},{2}'.format(i, ack1['ts'], cwnd))
+        if (p['t'] - pre_t).microseconds > 100000:
+            print( '{1},{2}'.format(i, ack1['ts'], cwnd))
+            pre_t = p['t']
 
 
 def parse_timestamp_opts(opts):
@@ -138,6 +141,7 @@ def main():
 
         td = datetime.utcfromtimestamp(t) - start_ts
         packets.append({
+            't': datetime.utcfromtimestamp(t),
             'ts': '{}.{:06}'.format(td.seconds, td.microseconds),
             'src': src_a,
             'dst': dst_a,
