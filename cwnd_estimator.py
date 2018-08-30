@@ -8,8 +8,8 @@ import dpkt
 
 client = '192.168.2.2'
 server = '192.168.1.2'
-mss = 1480
-
+mss = 1448
+port = 0
 
 # pritn packet
 def pp(p, msg=None):
@@ -27,12 +27,20 @@ def is_ack(p):
 
 
 def search_data(packets, ack_tsval):
+    """
+    ack の tsval を tsecr に持つ packet を返す
+    """
+
     for i, p in enumerate(packets):
         if p['src'] == client and p['tsecr'] == ack_tsval:
             return p
 
 
 def search_acks(packets, fs_seq):
+    """
+    data の seq に対応する ack の ack を持つ packet とその前の packet を返す
+    """
+
     pre = None
     for i, p in enumerate(packets):
         if p['src'] != server:
@@ -43,9 +51,12 @@ def search_acks(packets, fs_seq):
 
         pre = p
 
+    return None, None
+
 
 def calc_cwnd(packets):
     cwnd = '0'
+
     for i, p in enumerate(packets):
         if not is_ack(p):
             continue
@@ -63,8 +74,11 @@ def calc_cwnd(packets):
             continue
 
         if ack2 is None:
-            pp(ack1, 'ack2 not found')
+            # pp(ack1, 'ack2 not found')
             continue
+
+        if ack1_dash is None and ack2 is None:
+            break
 
         data2 = search_data(packets[i:], ack2['tsval'])
         if data2 is None:
@@ -85,11 +99,13 @@ def parse_timestamp_opts(opts):
     return None, None
 
 def main():
+    global port
+
     filepath = sys.argv[1]
     p = dpkt.pcap.Reader(open(filepath,'rb'))
 
     packets = []
-    start = None
+    start_ts = None
 
     for t, buf in p:
         eth = dpkt.ethernet.Ethernet(buf)
@@ -105,10 +121,18 @@ def main():
         options = dpkt.tcp.parse_opts ( tcp.opts )
         tsval, tsecr = parse_timestamp_opts(dpkt.tcp.parse_opts ( tcp.opts ))
 
-        if start is None:
-            start = datetime.utcfromtimestamp(t)
+        # キャプチャファイルと同じタイムスタンプ表示
+        if start_ts is None:
+            start_ts = datetime.utcfromtimestamp(t)
 
-        td = datetime.utcfromtimestamp(t) - start
+        # iperf3 の制御ストリームは除外
+        if port == 0:
+            port = tcp.sport
+
+        if tcp.sport == port or tcp.dport == port:
+            continue
+
+        td = datetime.utcfromtimestamp(t) - start_ts
         packets.append({
             'ts': '{}.{:06}'.format(td.seconds, td.microseconds),
             'src': src_a,
