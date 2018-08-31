@@ -1,4 +1,7 @@
 # -*- coding: utf-8 -*-
+
+# python cwnd_calculator.py "path/to/dumpfile"
+
 import sys
 from datetime import datetime
 from socket import inet_ntoa
@@ -8,7 +11,7 @@ import dpkt
 
 client = '192.168.2.2'
 server = '192.168.1.2'
-mss = 1448
+mss = 1448              # iperf3 mss: 1460　となり, 1460 - 12 (options) = 1448
 port = 0
 
 
@@ -88,6 +91,7 @@ def calc_cwnd(packets):
 
         cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
         print( '{1},{2}'.format(i, ack1['ts'], cwnd))
+
 
 def parse_timestamp_opts(opts):
     for _type, raw_data in opts:
