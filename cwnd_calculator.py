@@ -11,8 +11,6 @@ server = '192.168.1.2'
 mss = 1448
 port = 0
 
-plimit = 1500
-
 
 # pritn packet
 def pp(p, msg=None):
@@ -58,21 +56,23 @@ def search_acks(packets, fs_seq):
 
 
 def calc_cwnd(packets):
+
     cwnd = 0
-    pre_t = datetime.min
+    ack2 = None
 
     for i, p in enumerate(packets):
-        if not is_ack(p):
-            continue
-
         ack1 = p
 
-        data1 = search_data(packets[i:i+plimit], ack1['tsval'])
-        if data1 is None:
-            # pp(ack1, 'data1 not found')
+        if ack2 is not None and ack1 is not ack2:
             continue
 
-        ack1_dash, ack2 = search_acks(packets[i:i+plimit], data1['seq'])
+        data1 = search_data(packets[i:], ack1['tsval'])
+        if data1 is None:
+            # pp(ack1, 'data1 not found')
+            ack2 = None
+            continue
+
+        ack1_dash, ack2 = search_acks(packets[i:], data1['seq'])
         if ack1_dash is None:
             # pp(ack1, 'ack1_dash not found')
             continue
@@ -81,19 +81,13 @@ def calc_cwnd(packets):
             # pp(ack1, 'ack2 not found')
             continue
 
-        if ack1_dash is None and ack2 is None:
-            break
-
-        data2 = search_data(packets[i:i+plimit], ack2['tsval'])
+        data2 = search_data(packets[i:], ack2['tsval'])
         if data2 is None:
             # pp(ack1, 'data2 not found')
             continue
 
         cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
-        if (p['t'] - pre_t).microseconds > 100000:
-            print( '{1},{2}'.format(i, ack1['ts'], cwnd))
-            pre_t = p['t']
-
+        print( '{1},{2}'.format(i, ack1['ts'], cwnd))
 
 def parse_timestamp_opts(opts):
     for _type, raw_data in opts:
@@ -141,7 +135,6 @@ def main():
 
         td = datetime.utcfromtimestamp(t) - start_ts
         packets.append({
-            't': datetime.utcfromtimestamp(t),
             'ts': '{}.{:06}'.format(td.seconds, td.microseconds),
             'src': src_a,
             'dst': dst_a,
