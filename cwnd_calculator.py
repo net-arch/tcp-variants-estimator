@@ -58,6 +58,31 @@ def search_acks(packets, fs_seq):
     return None, None
 
 
+def check_retransmit(packets, data1, ack1_dash):
+    pre_ack = None
+
+    for p in packets:
+        if p['ts'] < data1['ts']:
+            continue
+
+        if p['ts'] > ack1_dash['ts']:
+            break
+
+        if not is_ack(p):
+            continue
+
+        if pre_ack is None:
+            pre_ack = p
+            continue
+
+        if pre_ack['ack'] == p['ack']:
+            return True
+
+        pre_ack = p
+
+    return False
+
+
 def calc_cwnd(packets):
 
     cwnd = 0
@@ -90,6 +115,10 @@ def calc_cwnd(packets):
             continue
 
         cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
+
+        if check_retransmit(packets[i:], data1, ack1_dash):
+            continue
+
         print( '{1},{2}'.format(i, ack1['ts'], cwnd))
 
 
