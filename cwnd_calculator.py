@@ -89,6 +89,8 @@ def calc_cwnd(packets):
     cwnd = 0
     ack2 = None
 
+    print('timestamp,cwnd,delta_cwnd')
+
     for i, p in enumerate(packets):
         ack1 = p
 
