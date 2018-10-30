@@ -85,6 +85,7 @@ def check_retransmit(packets, data1, ack1_dash):
 
 def calc_cwnd(packets):
 
+    pre_cwnd = 0
     cwnd = 0
     ack2 = None
 
@@ -114,12 +115,14 @@ def calc_cwnd(packets):
             # pp(ack1, 'data2 not found')
             continue
 
+        pre_cwnd = cwnd
         cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
+        delta_cwnd = cwnd - pre_cwnd
 
         if check_retransmit(packets[i:], data1, ack1_dash):
             continue
 
-        print( '{1},{2}'.format(i, ack1['ts'], cwnd))
+        print('{},{},{}'.format(ack1['ts'], cwnd, delta_cwnd))
 
 
 def parse_timestamp_opts(opts):
