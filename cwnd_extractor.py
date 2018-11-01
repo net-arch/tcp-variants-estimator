@@ -62,7 +62,9 @@ def search_acks(packets, fs_seq):
             continue
 
         if p['ack'] > fs_seq:
-            return pre, p
+            # sequence 32bit 一巡対策　かなりいい加減
+            if abs(p['ack'] - fs_seq) < 2 ** 31:
+                return pre, p
 
         pre = p
 
@@ -131,9 +133,16 @@ def extract_cwnd(packets):
             continue
 
         if check_retransmit(packets[i:], data1, ack1_dash):
+            # pp(ack1, 'retransmit detected')
             continue
 
-        cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
+        pre_cwnd = cwnd
+
+        snd_bytes = (data2['seq'] - ack1_dash['ack'])
+        if snd_bytes < 0:
+            snd_bytes += 2 ** 32
+
+        cwnd = int(snd_bytes / mss)
 
         ts_list.append(float(ack1['ts']))
         cwnd_list.append(cwnd)
