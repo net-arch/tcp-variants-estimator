@@ -3,6 +3,7 @@
 # python cwnd_extractor.py "path/to/dumpfile"
 
 import sys
+import matplotlib.pyplot as plt
 from datetime import datetime
 from socket import inet_ntoa
 from binascii import hexlify
@@ -13,6 +14,16 @@ client = '192.168.2.2'
 server = '192.168.1.2'
 mss = 1448              # iperf3 mss: 1460　となり, 1460 - 12 (options) = 1448
 port = 0
+
+
+def stdout(ts, cwnd, delta):
+    for i, p in enumerate(ts):
+        print('{},{},{}'.format(ts[i], cwnd[i], delta[i]))
+
+
+def plot(ts, cwnd, delta):
+    plt.plot(ts, cwnd)
+    plt.show()
 
 
 # pritn packet
@@ -36,7 +47,7 @@ def search_data(packets, ack_tsval):
     """
 
     for p in packets:
-        if p['src'] == client and p['tsecr'] == ack_tsval:
+        if p['src'] == client and p['tsecr'] >= ack_tsval:
             return p
 
 
@@ -84,14 +95,17 @@ def check_retransmit(packets, data1, ack1_dash):
 
 
 def extract_cwnd(packets):
+    ts_list = []
+    cwnd_list = []
+    delta_list = []
 
     pre_cwnd = 0
     cwnd = 0
     ack2 = None
 
-    print('timestamp,cwnd,delta_cwnd')
-
     for i, p in enumerate(packets):
+        if not is_ack(p):
+            continue
         ack1 = p
 
         if ack2 is not None and ack1 is not ack2:
@@ -100,7 +114,6 @@ def extract_cwnd(packets):
         data1 = search_data(packets[i:], ack1['tsval'])
         if data1 is None:
             # pp(ack1, 'data1 not found')
-            ack2 = None
             continue
 
         ack1_dash, ack2 = search_acks(packets[i:], data1['seq'])
@@ -117,15 +130,16 @@ def extract_cwnd(packets):
             # pp(ack1, 'data2 not found')
             continue
 
-        pre_cwnd = cwnd
-        cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
-        delta_cwnd = cwnd - pre_cwnd
-
         if check_retransmit(packets[i:], data1, ack1_dash):
             continue
 
-        print('{},{},{}'.format(ack1['ts'], cwnd, delta_cwnd))
+        cwnd = int((data2['seq'] - ack1_dash['ack']) / mss)
 
+        ts_list.append(float(ack1['ts']))
+        cwnd_list.append(cwnd)
+        delta_list.append(cwnd - pre_cwnd)
+
+    return ts_list, cwnd_list, delta_list
 
 def parse_timestamp_opts(opts):
     for _type, raw_data in opts:
@@ -157,8 +171,8 @@ def main():
 
         tcp = ip.data
 
-        options = dpkt.tcp.parse_opts ( tcp.opts )
-        tsval, tsecr = parse_timestamp_opts(dpkt.tcp.parse_opts ( tcp.opts ))
+        options = dpkt.tcp.parse_opts(tcp.opts)
+        tsval, tsecr = parse_timestamp_opts(options)
 
         # キャプチャファイルと同じタイムスタンプ表示
         if start_ts is None:
@@ -171,6 +185,9 @@ def main():
         if tcp.sport == port or tcp.dport == port:
             continue
 
+        if tcp.flags & dpkt.tcp.TH_RST:
+            break
+
         td = datetime.utcfromtimestamp(t) - start_ts
         packets.append({
             'ts': '{}.{:06}'.format(td.seconds, td.microseconds),
@@ -182,7 +199,9 @@ def main():
             'tsecr': tsecr
         })
 
-    extract_cwnd(packets)
+    ts, cwnd, delta = extract_cwnd(packets)
+    stdout(ts, cwnd, delta)
+    plot(ts, cwnd, delta)
 
 
 if __name__ == '__main__':
