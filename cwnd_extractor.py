@@ -75,10 +75,10 @@ def check_retransmit(packets, data1, ack1_dash):
     pre_ack = None
 
     for p in packets:
-        if p['ts'] < data1['ts']:
+        if float(p['ts']) < float(data1['ts']):
             continue
 
-        if p['ts'] > ack1_dash['ts']:
+        if float(p['ts']) > float(ack1_dash['ts']):
             break
 
         if not is_ack(p):
