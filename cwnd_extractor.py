@@ -154,7 +154,7 @@ def extract_cwnd(packets):
         result['ts'] = float(ack1['ts'])
         result['cwnd'] = cwnd
         result['delta'] = cwnd - pre_cwnd
-        result['retransmit'] = retransmit
+        result['retransmit'] = int(retransmit)
         results.append(result)
 
         retransmit = False
