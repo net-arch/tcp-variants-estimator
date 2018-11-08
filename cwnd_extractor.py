@@ -16,14 +16,19 @@ mss = 1448              # iperf3 mss: 1460　となり, 1460 - 12 (options) = 14
 port = 0
 
 
-def stdout(ts, cwnd, delta):
-    for i, p in enumerate(ts):
-        print('{},{},{}'.format(ts[i], cwnd[i], delta[i]))
+def stdout(results):
+    for i, p in enumerate(results):
+        print('{},{},{},{}'.format(
+            results[i]['ts'],
+            results[i]['cwnd'],
+            results[i]['delta'],
+            results[i]['retransmit']))
 
 
-def plot(ts, cwnd, delta):
-    plt.plot(ts, cwnd)
-    plt.show()
+def plot(results, filepath):
+    plt.plot(results['ts'], results['cwnd'])
+    plt.savefig('images/'+filepath[filepath.rfind('/')+1:filepath.rfind('.')+1]+'png')
+    # plt.show()
 
 
 # pritn packet
@@ -97,13 +102,12 @@ def check_retransmit(packets, data1, ack1_dash):
 
 
 def extract_cwnd(packets):
-    ts_list = []
-    cwnd_list = []
-    delta_list = []
+    results = []
 
     pre_cwnd = 0
     cwnd = 0
     ack2 = None
+    retransmit = False
 
     for i, p in enumerate(packets):
         if not is_ack(p):
@@ -133,6 +137,7 @@ def extract_cwnd(packets):
             continue
 
         if check_retransmit(packets[i:], data1, ack1_dash):
+            retransmit = True
             # pp(ack1, 'retransmit detected')
             continue
 
@@ -144,11 +149,17 @@ def extract_cwnd(packets):
 
         cwnd = int(snd_bytes / mss)
 
-        ts_list.append(float(ack1['ts']))
-        cwnd_list.append(cwnd)
-        delta_list.append(cwnd - pre_cwnd)
+        result = {}
+        result['ts'] = float(ack1['ts'])
+        result['cwnd'] = cwnd
+        result['delta'] = cwnd - pre_cwnd
+        result['retransmit'] = retransmit
+        results.append(result)
 
-    return ts_list, cwnd_list, delta_list
+        retransmit = False
+
+    return results
+
 
 def parse_timestamp_opts(opts):
     for _type, raw_data in opts:
@@ -208,9 +219,9 @@ def main():
             'tsecr': tsecr
         })
 
-    ts, cwnd, delta = extract_cwnd(packets)
-    stdout(ts, cwnd, delta)
-    plot(ts, cwnd, delta)
+    results = extract_cwnd(packets)
+    stdout(results)
+    # plot(results, filepath)
 
 
 if __name__ == '__main__':
