@@ -17,6 +17,7 @@ port = 0
 
 
 def stdout(results):
+    print('ts,cwnd,delta,retransmit')
     for i, p in enumerate(results):
         print('{},{},{},{}'.format(
             results[i]['ts'],
