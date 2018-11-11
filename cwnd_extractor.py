@@ -3,7 +3,6 @@
 # python cwnd_extractor.py "path/to/dumpfile"
 
 import os, sys
-import matplotlib.pyplot as plt
 from datetime import datetime
 from socket import inet_ntoa
 from binascii import hexlify
@@ -24,14 +23,6 @@ def stdout(results):
             results[i]['cwnd'],
             results[i]['delta'],
             results[i]['retransmit']))
-
-
-def plot(results, filepath):
-    plt.plot(results['ts'], results['cwnd'])
-    base = os.path.basename(filepath)
-    name, ext = os.path.splitext(base)
-    plt.savefig('images/{}.png'.format(name)
-    # plt.show()
 
 
 # pritn packet
@@ -224,7 +215,6 @@ def main():
 
     results = extract_cwnd(packets)
     stdout(results)
-    # plot(results, filepath)
 
 
 if __name__ == '__main__':
