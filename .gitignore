@@ -1,2 +1,12 @@
-data/*
-result/*
+# enviroments
+venv/*
+.envrc
+
+# temp
+demo/*
+
+# data
+images/*
+dump/*
+extract/*
+split/*
