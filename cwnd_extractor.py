@@ -2,7 +2,7 @@
 
 # python cwnd_extractor.py "path/to/dumpfile"
 
-import sys
+import os, sys
 import matplotlib.pyplot as plt
 from datetime import datetime
 from socket import inet_ntoa
@@ -28,7 +28,9 @@ def stdout(results):
 
 def plot(results, filepath):
     plt.plot(results['ts'], results['cwnd'])
-    plt.savefig('images/'+filepath[filepath.rfind('/')+1:filepath.rfind('.')+1]+'png')
+    base = os.path.basename(filepath)
+    name, ext = os.path.splitext(base)
+    plt.savefig('images/{}.png'.format(name)
     # plt.show()
 
 
