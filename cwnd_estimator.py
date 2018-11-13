@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 
-# python cwnd_extractor.py "path/to/dumpfile"
+# python cwnd_estimatoror.py "path/to/dumpfile"
 
 import os, sys
 from datetime import datetime
@@ -95,7 +95,7 @@ def check_retransmit(packets, data1, ack1_dash):
     return False
 
 
-def extract_cwnd(packets):
+def estimator_cwnd(packets):
     results = []
 
     pre_cwnd = 0
@@ -213,7 +213,7 @@ def main():
             'tsecr': tsecr
         })
 
-    results = extract_cwnd(packets)
+    results = estimator_cwnd(packets)
     stdout(results)
 
 
