@@ -8,6 +8,7 @@ from datetime import datetime
 from socket import inet_ntoa
 from binascii import hexlify
 import dpkt
+import pandas as pd
 
 
 class CwndEstimator(object):
@@ -19,12 +20,14 @@ class CwndEstimator(object):
         # iperf3 mss: 1460　となり, 1460 - 12 (options) = 1448
         mss=1448,
         port=0,
+        columns=['ts', 'cwnd', 'delta', 'retransmit']
     ):
         self.filepath = filepath
         self.client = client
         self.server = server
         self.mss = mss
         self.port = port
+        self.columns = columns
 
     # print packet
     def pp(self, p, msg=None):
@@ -139,11 +142,10 @@ class CwndEstimator(object):
 
             cwnd = int(snd_bytes / self.mss)
 
-            result = {}
-            result['ts'] = float(ack1['ts'])
-            result['cwnd'] = cwnd
-            result['delta'] = cwnd - pre_cwnd
-            result['retransmit'] = int(retransmit)
+            result = [ack1['ts'],
+                      cwnd,
+                      cwnd - pre_cwnd,
+                      int(retransmit)]
             results.append(result)
 
             retransmit = False
@@ -205,21 +207,14 @@ class CwndEstimator(object):
                     'tsecr': tsecr
                 })
 
-            return self.estimate_cwnd(packets)
-
-
-def output(self):
-    print('ts,cwnd,delta,retransmit')
-    for i, p in enumerate(results):
-        print('{},{},{},{}'.format(
-            results[i]['ts'],
-            results[i]['cwnd'],
-            results[i]['delta'],
-            results[i]['retransmit']))
+            results = self.estimate_cwnd(packets)
+            df = pd.DataFrame(results, columns=self.columns)
+            return df
 
 
 if __name__ == '__main__':
-    filepath = sys.argv[1]
-    estimator = CwndEstimator(filepath)
-    results = estimator.estimate()
-    output(results)
+    input = sys.argv[1]
+    output = sys.argv[2]
+    estimator = CwndEstimator(input)
+    df = estimator.estimate()
+    df.to_csv(output, index=False)
