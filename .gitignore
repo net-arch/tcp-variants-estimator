@@ -2,12 +2,9 @@
 venv/*
 .envrc
 
-# temp
-demo/*
-
 # data
 images/*
 dump/*
-extract/*
+estimate/*
 split/*
 normalize/*
