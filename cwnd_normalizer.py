@@ -1,33 +1,44 @@
-import os, sys
+import os
+import sys
 import pandas as pd
 
-seq_len = 128
 
+class CwndNormalizer(object):
+    def __init__(self, df, seq_len):
+        self.df = df
+        self.seq_len = seq_len
 
-def min_max(x):
-    min = x.min()
-    max = x.max()
-    result = (x-min)/(max-min)#
-    return result
+    def normalize(self):
+        df = self.df
+        dn = (df - df.min()) / (df.max() - df.min())
+        dn['retransmit'] = df['retransmit']
+
+        ts = []
+        cwnd = []
+
+        seq_len = self.seq_len
+        width = 1 / seq_len
+        t, i = 0, 0
+        for t in range(seq_len):
+            if t <= dn['ts'][i] / width < (t + 1):
+                ts.append(dn['ts'][i])
+                cwnd.append(dn['cwnd'][i])
+                i += 1
+            else:
+                ts.append(dn['ts'][i])
+                cwnd.append(dn['cwnd'][i])
+
+        data = {'ts': ts, 'cwnd': cwnd}
+        return pd.DataFrame(data)
 
 
 def main():
-    filepath = sys.argv[1]
-
-    print('ts,cwnd')
-
-    df = pd.read_csv(filepath)
-
-    ts = min_max(df['ts'].values)
-    cwnd = min_max(df['cwnd'].values)
-
-    i, t = 0, 0
-    for t in range(seq_len):
-        if (t-1)/seq_len < ts[i] <= t / seq_len:
-            print('{},{}'.format(ts[i], cwnd[i]))
-            i += 1
-        else:
-            print('{},{}'.format(ts[i], cwnd[i]))
+    input = sys.argv[1]
+    output = sys.argv[2]
+    df = pd.read_csv(input)
+    normalizer = CwndNormalizer(df, 128)
+    dn = normalizer.normalize()
+    dn.to_csv(output)
 
 
 if __name__ == '__main__':
