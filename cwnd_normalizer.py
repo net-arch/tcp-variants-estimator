@@ -23,7 +23,16 @@ class CwndNormalizer(object):
             if t <= dn['ts'][i] / width < (t + 1):
                 ts.append(dn['ts'][i])
                 cwnd.append(dn['cwnd'][i])
-                i += 1
+
+                # koko majide unnko
+                # Fixme
+                while True:
+                    if not (i < len(dn['ts'])):
+                        break
+
+                    if dn['ts'][i] / width >= t + 1:
+                        break
+                    i += 1
             else:
                 ts.append(dn['ts'][i])
                 cwnd.append(dn['cwnd'][i])
