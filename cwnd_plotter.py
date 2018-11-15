@@ -13,7 +13,7 @@ def main():
 
     if len(sys.argv) > 2:
         output = sys.argv[2]
-        plt.save(output)
+        plt.savefig(output)
     else:
         plt.show()
 
