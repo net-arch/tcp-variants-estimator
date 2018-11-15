@@ -1,36 +1,35 @@
-import os, sys, csv
+import os
+import sys
+import numpy as np
+import pandas as pd
 
-header = ['ts', 'cwnd', 'delta', 'retransmit']
-i = 0
 
+class CwndSplitter(object):
+    def __init__(self, df):
+        self.df = df
+        self.dfs = []
 
-def write(rows, filepath):
-    global i
+    def split(self):
+        df = self.df
+        retransmits = np.where(df['retransmit'] == 1)[0]
 
-    base = os.path.basename(filepath)
-    name, ext = os.path.splitext(base)
-    with open('split/{}.{}.csv'.format(name, i), 'w') as f:
-        writer = csv.writer(f, lineterminator='\n')
-        writer.writerow(header)
-        writer.writerows(rows)
-
-    i += 1
+        s = 0
+        for e in retransmits:
+            self.dfs.append(df[s:e])
+            s = e
+        return self.dfs
 
 
 def main():
-    filepath = sys.argv[1]
+    input = sys.argv[1]
+    output = sys.argv[2]
 
-    with open(filepath, 'r') as f:
-        reader = csv.reader(f)
-        header = next(reader)
+    df = pd.read_csv(input)
 
-        rows = []
-        for row in reader:
-            if row[3] == '1':
-                write(rows, filepath)
-                rows = []
-
-            rows.append(row)
+    splitter = CwndSplitter(df)
+    dfs = splitter.split()
+    for i, d in enumerate(dfs):
+        d.to_csv('{}.{}.csv'.format(output, i), float_format='%.6f', index=False)
 
 
 if __name__ == '__main__':
