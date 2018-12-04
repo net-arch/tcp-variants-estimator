@@ -9,8 +9,8 @@ class CwndNormalizer(object):
 
     def normalize(self, df):
         df = df.astype(float).reset_index(drop=True)
-        dn = (df - df.min()) / (df.max() - df.min())
-        dn['retransmit'] = df['retransmit']
+        ndf = (df - df.min()) / (df.max() - df.min())
+        ndf['retransmit'] = df['retransmit']
 
         ts = []
         cwnd = []
@@ -21,8 +21,8 @@ class CwndNormalizer(object):
         t = 0
         for t in range(seq_len):
             i = int(t * ratio)
-            ts.append(dn['ts'][i])
-            cwnd.append(dn['cwnd'][i])
+            ts.append(ndf['ts'][i])
+            cwnd.append(ndf['cwnd'][i])
 
         data = {'ts': ts, 'cwnd': cwnd}
         return pd.DataFrame(data)
@@ -33,8 +33,8 @@ def main():
     output = sys.argv[2]
     df = pd.read_csv(input)
     normalizer = CwndNormalizer(128)
-    dn = normalizer.normalize(df)
-    dn.to_csv(output)
+    ndf = normalizer.normalize(df)
+    ndf.to_csv(output)
 
 
 if __name__ == '__main__':
