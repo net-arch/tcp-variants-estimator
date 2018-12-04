@@ -4,12 +4,11 @@ import pandas as pd
 
 
 class CwndNormalizer(object):
-    def __init__(self, df, seq_len):
-        self.df = df
+    def __init__(self, seq_len):
         self.seq_len = seq_len
 
-    def normalize(self):
-        df = self.df.astype(float).reset_index(drop=True)
+    def normalize(self, df):
+        df = df.astype(float).reset_index(drop=True)
         dn = (df - df.min()) / (df.max() - df.min())
         dn['retransmit'] = df['retransmit']
 
@@ -33,8 +32,8 @@ def main():
     input = sys.argv[1]
     output = sys.argv[2]
     df = pd.read_csv(input)
-    normalizer = CwndNormalizer(df, 128)
-    dn = normalizer.normalize()
+    normalizer = CwndNormalizer(128)
+    dn = normalizer.normalize(df)
     dn.to_csv(output)
 
 

@@ -14,15 +14,13 @@ import pandas as pd
 class CwndEstimator(object):
     def __init__(
         self,
-        filepath,
-        client='192.168.2.2',
-        server='192.168.1.2',
+        client = '192.168.2.2',
+        server = '192.168.1.2',
         # iperf3 mss: 1460　となり, 1460 - 12 (options) = 1448
-        mss=1448,
-        port=0,
-        columns=['ts', 'cwnd', 'delta', 'retransmit']
+        mss = 1448,
+        port = 0,
+        columns = ['ts', 'cwnd', 'delta', 'retransmit']
     ):
-        self.filepath = filepath
         self.client = client
         self.server = server
         self.mss = mss
@@ -161,8 +159,8 @@ class CwndEstimator(object):
             return d[:8], d[8:]
         return None, None
 
-    def estimate(self):
-        with open(self.filepath, 'rb') as f:
+    def estimate(self, filepath):
+        with open(filepath, 'rb') as f:
             p = dpkt.pcap.Reader(f)
 
             packets = []
@@ -215,6 +213,6 @@ class CwndEstimator(object):
 if __name__ == '__main__':
     input = sys.argv[1]
     output = sys.argv[2]
-    estimator = CwndEstimator(input)
-    df = estimator.estimate()
+    estimator = CwndEstimator()
+    df = estimator.estimate(input)
     df.to_csv(output, index=False)

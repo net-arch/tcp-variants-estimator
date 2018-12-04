@@ -5,19 +5,16 @@ import pandas as pd
 
 
 class CwndSplitter(object):
-    def __init__(self, df):
-        self.df = df
-        self.dfs = []
-
-    def split(self):
-        df = self.df
+    def split(self, df):
         retransmits = np.where(df['retransmit'] == 1)[0]
+
+        dfs = []
 
         s = 0
         for e in retransmits:
-            self.dfs.append(df[s:e])
+            dfs.append(df[s:e])
             s = e
-        return self.dfs
+        return dfs
 
 
 def main():
@@ -26,8 +23,8 @@ def main():
 
     df = pd.read_csv(input)
 
-    splitter = CwndSplitter(df)
-    dfs = splitter.split()
+    splitter = CwndSplitter()
+    dfs = splitter.split(df)
     for i, d in enumerate(dfs):
         d.to_csv('{}.{}.csv'.format(output, i), float_format='%.6f', index=False)
 
