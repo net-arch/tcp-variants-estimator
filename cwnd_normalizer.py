@@ -17,25 +17,13 @@ class CwndNormalizer(object):
         cwnd = []
 
         seq_len = self.seq_len
-        width = 1 / seq_len
-        t, i = 0, 0
+        ratio = len(df) / seq_len
+
+        t = 0
         for t in range(seq_len):
-            if t <= dn['ts'][i] / width < (t + 1):
-                ts.append(dn['ts'][i])
-                cwnd.append(dn['cwnd'][i])
-
-                # koko majide unnko
-                # Fixme
-                while True:
-                    if not (i < len(dn['ts'])):
-                        break
-
-                    if dn['ts'][i] / width >= t + 1:
-                        break
-                    i += 1
-            else:
-                ts.append(dn['ts'][i])
-                cwnd.append(dn['cwnd'][i])
+            i = int(t * ratio)
+            ts.append(dn['ts'][i])
+            cwnd.append(dn['cwnd'][i])
 
         data = {'ts': ts, 'cwnd': cwnd}
         return pd.DataFrame(data)
