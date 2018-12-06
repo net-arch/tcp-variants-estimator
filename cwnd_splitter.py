@@ -12,7 +12,7 @@ class CwndSplitter(object):
 
         s = 0
         for e in retransmits:
-            dfs.append(df[s:e])
+            dfs.append(df[s:e].reset_index(drop=True))
             s = e
         return dfs
 

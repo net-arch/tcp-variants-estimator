@@ -8,7 +8,7 @@ class CwndNormalizer(object):
         self.seq_len = seq_len
 
     def normalize(self, df):
-        df = df.astype(float).reset_index(drop=True)
+        df = df.astype(float)
         ndf = (df - df.min()) / (df.max() - df.min())
         ndf['retransmit'] = df['retransmit']
 
