@@ -4,8 +4,6 @@ import numpy as np
 import tensorflow as tf
 from tensorflow.contrib import rnn
 
-random.seed(777)
-np.random.seed(777)
 tf.set_random_seed(777)
 
 # パラメーター
@@ -21,9 +19,10 @@ BATCH_SIZE = 128  # バッチサイズ
 
 def read_dataframe(tcp, l, n):
     path = 'result/{}.csv'.format(tcp)
-    df = pd.read_csv(path).dropna()[-1*n:]    # 前から / 後ろから
+    df = pd.read_csv(path).dropna()[-1 * n:]    # 前から / 後ろから
     label = np.full([n, 1], l)
-    return np.hstack((df.values, label)).reshape(-1, SEQ_LEN+1, 1)
+    return np.hstack((df.values, label)).reshape(-1, SEQ_LEN + 1, 1)
+
 
 def gen_dataset(seq_len, n_data):
     class_01_data = read_dataframe('cubic', 0, n_data)
@@ -80,5 +79,5 @@ for _ in range(N_STEPS):
         loss_test_, acc_test_ = sess.run(
             [loss, accuracy], feed_dict={x: x_test, t: t_test})
         print("[TRAIN] loss : %f, accuracy : %f" % (loss_, acc_))
-        print("[TEST loss : %f, accuracy : %f" % (loss_test_, acc_test_))
+        print("[TEST ] loss : %f, accuracy : %f" % (loss_test_, acc_test_))
 sess.close()
