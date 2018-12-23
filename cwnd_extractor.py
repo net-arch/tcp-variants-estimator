@@ -2,6 +2,7 @@ import sys
 import pandas as pd
 from cwnd_estimator import CwndEstimator
 from cwnd_splitter import CwndSplitter
+from cwnd_filter import CwndFilter
 from cwnd_normalizer import CwndNormalizer
 
 seq_len = 128
@@ -15,6 +16,9 @@ def main():
 
     splitter = CwndSplitter()
     dfs = splitter.split(df)
+
+    filter = CwndFilter()
+    dfs = filter.first(dfs)
 
     ndfs = []
     normalizer = CwndNormalizer(seq_len)
