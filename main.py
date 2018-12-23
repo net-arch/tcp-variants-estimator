@@ -11,12 +11,12 @@ tf.set_random_seed(777)
 # パラメーター
 N_CLASSES = 3  # クラス数
 N_INPUTS = 1  # 1ステップに入力されるデータ数
-N_STEPS = 200  # 学習ステップ数
+N_STEPS = 2000  # 学習ステップ数
 SEQ_LEN = 128  # 系列長
-N_NODES = 64  # ノード数
-N_DATA = 100  # 各クラスの学習用データ数
-N_TEST = 100  # テスト用データ数
-BATCH_SIZE = 20  # バッチサイズ
+N_NODES = 128  # ノード数
+N_DATA = 200  # 各クラスの学習用データ数
+N_TEST = 200  # テスト用データ数
+BATCH_SIZE = 128  # バッチサイズ
 
 
 def read_dataframe(tcp, l, n):
@@ -43,7 +43,7 @@ x_test, t_test = gen_dataset(SEQ_LEN, N_TEST)  # テスト用データセット
 x = tf.placeholder(tf.float32, [None, SEQ_LEN, N_INPUTS])  # 入力データ
 t = tf.placeholder(tf.int32, [None])  # 教師データ
 t_on_hot = tf.one_hot(t, depth=N_CLASSES, dtype=tf.float32)  # 1-of-Kベクトル
-cell = rnn.BasicRNNCell(num_units=N_NODES, activation=tf.nn.tanh)  # 中間層のセル
+cell = rnn.LSTMCell(num_units=N_NODES, activation=tf.nn.tanh)  # 中間層のセル
 # RNNに入力およびセル設定する
 outputs, states = tf.nn.dynamic_rnn(
     cell=cell, inputs=x, dtype=tf.float32, time_major=False)
