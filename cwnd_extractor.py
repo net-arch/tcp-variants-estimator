@@ -19,6 +19,7 @@ def main():
 
     filter = CwndFilter()
     dfs = filter.first(dfs)
+    dfs.sort(key=lambda df:len(df), reverse=True)
 
     ndfs = []
     normalizer = CwndNormalizer(seq_len)
