@@ -6,8 +6,4 @@ venv/*
 .envrc
 
 # data
-images/*
-dump/*
-estimate/*
-split/*
-normalize/*
+data/*
