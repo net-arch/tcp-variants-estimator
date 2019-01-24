@@ -1,7 +1,7 @@
-ALGO_LIST="reno cubic bbr bic westwood htcp hybla vegas scalable lp veno yeah illinois"
+ALGO_LIST="reno cubic bbr bic westwood htcp vegas veno scalable highspeed "
 
 for ALGO in $ALGO_LIST; do
-  for i in {0..9}; do
+  for i in {0..19}; do
     FILEPATH="data/dump/${ALGO}.${i}.dump"
     rm -f $FILEPATH
 

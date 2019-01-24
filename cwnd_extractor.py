@@ -1,25 +1,35 @@
 import sys
 import pandas as pd
-from cwnd_estimator import CwndEstimator
 from cwnd_splitter import CwndSplitter
 from cwnd_filter import CwndFilter
 from cwnd_normalizer import CwndNormalizer
 
 seq_len = 128
 
-def main():
-    input = sys.argv[1]
-    output = sys.argv[2]
-
-    estimator = CwndEstimator()
-    df = estimator.estimate(input)
-
+def extract(df):
     splitter = CwndSplitter()
     dfs = splitter.split(df)
 
     filter = CwndFilter()
     dfs = filter.first(dfs)
-    dfs.sort(key=lambda df:len(df), reverse=True)
+    return dfs
+
+
+def main():
+    algo = sys.argv[1]
+    start = int(sys.argv[2])
+    end = int(sys.argv[3])
+    output = sys.argv[4]
+
+    dfs = []
+
+    for i in range(start, end):
+        filepath = "data/estimate/{}.{}.csv".format(algo, i)
+        df = pd.read_csv(filepath)
+        _dfs = extract(df)
+        dfs.extend(_dfs)
+
+    dfs.sort(key=lambda df: len(df), reverse=True)
 
     ndfs = []
     normalizer = CwndNormalizer(seq_len)
@@ -31,7 +41,8 @@ def main():
         tmp = pd.Series(d['cwnd'], index=seq_df.columns)
         seq_df = seq_df.append(tmp, ignore_index=True)
 
-    seq_df.to_csv(output, mode='a', header=False, index=False)
+    seq_df.to_csv(output, header=False, index=False)
+
 
 if __name__ == '__main__':
     main()
