@@ -1,8 +1,7 @@
 # -*- coding: utf-8 -*-
 
-# python cwnd_estimatoror.py "path/to/dumpfile"
+# python cwnd_estimator.py "path/to/dumpfile" "path/to/estimatefile.csv"
 
-import os
 import sys
 from datetime import datetime
 from socket import inet_ntoa
@@ -12,28 +11,24 @@ import pandas as pd
 
 
 class CwndEstimator(object):
-    def __init__(
-        self,
-        client = '192.168.2.2',
-        server = '192.168.1.2',
-        # iperf3 mss: 1460　となり, 1460 - 12 (options) = 1448
-        mss = 1448,
-        port = 0,
-        columns = ['ts', 'cwnd', 'delta', 'retransmit']
-    ):
+    def __init__(self, client, server, mss, port=None):
         self.client = client
         self.server = server
         self.mss = mss
         self.port = port
-        self.columns = columns
 
     # print packet
     def pp(self, p, msg=None):
-        display = ""
+        display = ''
         if msg is not None:
-            display += msg + "\n"
-        display += "ts: {}, src: {}, dst: {}, seq: {}, ack: {}, tsval: {}, tsecr: {}" \
-            .format(p['ts'], p['src'], p['dst'], p['seq'], p['ack'], int(p['tsval'], 16), int(p['tsecr'], 16))
+            display += msg + '\n'
+        display += 't: {}, '.format(p['t'])
+        display += 'src: {}, '.format(p['src'])
+        display += 'dst: {}, '.format(p['dst'])
+        display += 'seq: {}, '.format(p['seq'])
+        display += 'ack: {}, '.format(p['ack'])
+        display += 'tsval: {}, '.format(int(p['tsval'], 16))
+        display += 'tsecr: {}'.format(int(p['tsecr'], 16))
 
         print(display)
 
@@ -49,9 +44,9 @@ class CwndEstimator(object):
             if p['src'] == self.client and p['tsecr'] >= ack_tsval:
                 return p
 
-    def search_acks(self, packets, fs_seq):
+    def search_acks(self, packets, data_seq):
         """
-        data の seq に対応する ack の ack を持つ packet とその前の packet を返す
+        data の seq に対応する ack を持つ packet とその前の packet を返す
         """
 
         pre = None
@@ -59,9 +54,9 @@ class CwndEstimator(object):
             if p['src'] != self.server:
                 continue
 
-            if p['ack'] > fs_seq:
+            if p['ack'] > data_seq:
                 # sequence 32bit 一巡対策　かなりいい加減
-                if abs(p['ack'] - fs_seq) < 2 ** 31:
+                if abs(p['ack'] - data_seq) < 2 ** 31:
                     return pre, p
 
             pre = p
@@ -72,10 +67,10 @@ class CwndEstimator(object):
         pre_ack = None
 
         for p in packets:
-            if float(p['ts']) < float(data1['ts']):
+            if float(p['t']) < float(data1['t']):
                 continue
 
-            if float(p['ts']) > float(ack1_dash['ts']):
+            if float(p['t']) > float(ack1_dash['t']):
                 break
 
             if not self.is_ack(p):
@@ -140,10 +135,12 @@ class CwndEstimator(object):
 
             cwnd = int(snd_bytes / self.mss)
 
-            result = [ack1['ts'],
-                      cwnd,
-                      cwnd - pre_cwnd,
-                      int(retransmit)]
+            result = [
+                ack1['t'],
+                cwnd,
+                cwnd - pre_cwnd,
+                int(retransmit)
+            ]
             results.append(result)
 
             retransmit = False
@@ -185,7 +182,7 @@ class CwndEstimator(object):
                     start_ts = datetime.utcfromtimestamp(t)
 
                 # iperf3 の制御ストリームは除外
-                if self.port == 0:
+                if self.port == None:
                     self.port = tcp.sport
 
                 if tcp.sport == self.port or tcp.dport == self.port:
@@ -196,7 +193,7 @@ class CwndEstimator(object):
 
                 td = datetime.utcfromtimestamp(t) - start_ts
                 packets.append({
-                    'ts': '{}.{:06}'.format(td.seconds, td.microseconds),
+                    't': '{}.{:06}'.format(td.seconds, td.microseconds),
                     'src': src_a,
                     'dst': dst_a,
                     'seq': tcp.seq,
@@ -206,13 +203,23 @@ class CwndEstimator(object):
                 })
 
             results = self.estimate_cwnd(packets)
-            df = pd.DataFrame(results, columns=self.columns)
+            columns = ['t', 'cwnd', 'delta', 'retransmit']
+            df = pd.DataFrame(results, columns=columns)
             return df
 
 
+def main():
+    dump_path = sys.argv[1]
+    estimate_path = sys.argv[2]
+
+    client = '192.168.2.2'
+    server = '192.168.1.2'
+    mss = 1448  # iperf3 mss: 1460 となり, 1460 - 12 (options) = 1448
+
+    estimator = CwndEstimator(client, server, mss)
+    df = estimator.estimate(dump_path)
+    df.to_csv(estimate_path, index=False)
+
+
 if __name__ == '__main__':
-    input = sys.argv[1]
-    output = sys.argv[2]
-    estimator = CwndEstimator()
-    df = estimator.estimate(input)
-    df.to_csv(output, index=False)
+    main()
