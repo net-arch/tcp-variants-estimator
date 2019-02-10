@@ -1,12 +1,12 @@
-ALGO_LIST="reno cubic bbr bic westwood htcp vegas veno scalable highspeed "
+./env.sh
 
-for ALGO in $ALGO_LIST; do
-  for i in {0..19}; do
-    FILEPATH="data/dump/${ALGO}.${i}.dump"
+for tcp in $TCP_LIST; do
+  for i in $(seq $start $end); do
+    FILEPATH="data/dump/$tcp.$i.dump"
     rm -f $FILEPATH
 
     echo
-    echo [ $ALGO $i ]
+    echo [ $tcp $i ]
     echo
 
     sleep 2
@@ -15,8 +15,8 @@ for ALGO in $ALGO_LIST; do
     echo capture started... PID:$PID
 
     sleep 2
-    iperf3 -c 192.168.1.2 -t 600 -C ${ALGO}
-    kill ${PID}
+    iperf3 -c 192.168.1.2 -t 600 -C $tcp
+    kill $PID
     echo capture stopped... PID:$PID
   done
 done

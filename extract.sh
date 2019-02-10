@@ -1,15 +1,18 @@
-source venv/bin/activate
+./env.sh
 
-ALGO_LIST="reno cubic bbr bic westwood htcp vegas veno scalable highspeed "
 
-for algo in $ALGO_LIST; do
-	echo Extract : Train $algo
-	python3 cwnd_extractor.py $algo 0 9 data/train/$algo.csv
+for tcp in $TCP_LIST[@]; do
+  echo Extract : Train $tcp
+  python3 cwnd_extractor.py $tcp $TRAIN_S $TRAIN_E data/train/$tcp.csv
 done
 
-for algo in $ALGO_LIST; do
-	echo Extract : Test $algo
-	python3 cwnd_extractor.py $algo 10 19 data/test/$algo.csv
+for tcp in $TCP_LIST[@]; do
+  echo Extract : Test $tcp
+  python3 cwnd_extractor.py $tcp $TEST_S $TEST_E data/test/$tcp.csv
 done
 
-./wc.sh
+# check
+for tcp in ${TCP_LIST[@]}; do
+  wc -l data/train/$tcp.csv
+  wc -l data/test/$tcp.csv
+done
