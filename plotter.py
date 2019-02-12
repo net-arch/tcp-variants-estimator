@@ -22,6 +22,9 @@ class Plotter(object):
 
     def cwnd(self):
         plt.rcParams['font.size'] = args.fontsize
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
+        plt.rcParams['xtick.major.width'] = 1.2
 
         df = pd.read_csv(args.csv)
         df = df[['t', 'cwnd']].rename(columns={'t': 'Time [s]'})
@@ -29,13 +32,16 @@ class Plotter(object):
                      figsize=(args.width, args.height),
                      fontsize=args.fontsize)
         ax.set_ylabel('Window Size [segments]')
-        plt.subplots_adjust(left=0.08, right=0.98, bottom=0.1, top=0.98)
+        plt.subplots_adjust(left=0.07, right=0.99, bottom=0.08, top=0.99)
         if args.output is not None:
             plt.savefig(args.output)
         else:
             plt.show()
 
     def process(self):
+        plt.rcParams['xtick.direction'] = 'in'
+        plt.rcParams['ytick.direction'] = 'in'
+
         df = pd.read_csv(args.csv)
         df = df.query('Epoch <= {}'.format(args.epoch))
         df.plot(x=df.columns[0],
@@ -43,7 +49,9 @@ class Plotter(object):
                 figsize=(args.width, args.height))
         plt.legend(fontsize=args.fontsize)
         plt.xlabel(df.columns[0], fontsize=args.fontsize)
+        plt.ylabel('Accuracy', fontsize=args.fontsize)
         plt.yticks(np.arange(0, 1.1, 0.1))
+        plt.subplots_adjust(left=0.08, right=0.99, bottom=0.08, top=0.99)
 
         if args.output is not None:
             plt.savefig(args.output)
@@ -57,7 +65,8 @@ class Plotter(object):
             df.columns,
             normalize=True,
             fontsize=args.fontsize,
-            figsize=(args.width, args.height)
+            figsize=(args.width, args.height),
+            filepath=args.output
         )
 
 
